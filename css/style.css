@@ -25,6 +25,7 @@ html, body {
 #canvas {
   display: block;
   width: 100vw; height: 100vh;
+  touch-action: none; /* let OrbitControls handle all touch */
 }
 
 /* ── Loading Overlay ── */
@@ -354,11 +355,90 @@ html, body {
 .legend-swatch.reserved  { background: var(--amber); }
 .legend-swatch.sold      { background: var(--blue);  }
 
+/* ── Bottom Sheet (mobile popup) ── */
+#plot-popup.bottom-sheet {
+  position: fixed;
+  left: 0 !important;
+  right: 0;
+  bottom: 0;
+  top: auto !important;
+  width: 100% !important;
+  max-width: 100%;
+  border-radius: 20px 20px 0 0;
+  border-bottom: none;
+  padding: 24px 24px 36px;
+  transform: translateY(20px) scale(1) !important;
+}
+
+#plot-popup.bottom-sheet.visible {
+  transform: translateY(0) scale(1) !important;
+}
+
+/* drag handle on bottom sheet */
+#plot-popup.bottom-sheet::before {
+  content: '';
+  display: block;
+  width: 40px; height: 4px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 2px;
+  margin: 0 auto 18px;
+}
+
+#plot-popup.bottom-sheet .popup-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 16px;
+}
+
 /* ── Responsive ── */
-@media (max-width: 600px) {
-  #stats-bar  { top: 70px; transform: translateX(-50%) scale(0.9); }
-  #legend     { display: none; }
-  #compass    { top: 70px; right: 12px; width: 44px; height: 44px; }
-  #filter-panel { bottom: 20px; }
-  #plot-popup { width: calc(100vw - 32px); left: 16px !important; }
+@media (max-width: 640px) {
+  /* Header */
+  #header { padding: 12px 16px; }
+  .brand  { font-size: 1.1rem; }
+
+  /* Stats bar — smaller, scrollable if needed */
+  #stats-bar {
+    top: 64px;
+    gap: 1px;
+    padding: 5px 6px;
+    max-width: calc(100vw - 24px);
+  }
+  .stat-pill { padding: 5px 10px; font-size: 0.72rem; }
+  .stat-pill .count { font-size: 0.85rem; }
+
+  /* Hide legend — info is in popup */
+  #legend { display: none; }
+
+  /* Compass smaller, tucked up */
+  #compass { top: 64px; right: 12px; width: 42px; height: 42px; }
+  .compass-needle .n { font-size: 0.75rem; }
+
+  /* Filter bar — full width, big tap targets */
+  #filter-panel {
+    bottom: 0;
+    left: 0; right: 0;
+    transform: none;
+    border-radius: 0;
+    border-left: none; border-right: none; border-bottom: none;
+    padding: 10px 12px 28px; /* extra bottom for home bar */
+    justify-content: space-around;
+    gap: 4px;
+    backdrop-filter: blur(24px);
+  }
+
+  .filter-btn {
+    flex: 1;
+    padding: 10px 8px;
+    font-size: 0.78rem;
+    text-align: center;
+  }
+
+  /* Camera reset — above filter bar */
+  #controls-panel {
+    bottom: 100px;
+    right: 16px;
+  }
+
+  /* Tooltip hidden on touch */
+  #tooltip { display: none; }
 }

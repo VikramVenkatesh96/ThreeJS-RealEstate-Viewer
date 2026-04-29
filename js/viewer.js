@@ -59,6 +59,11 @@ controls.minDistance      = 10;
 controls.maxDistance      = 200;
 controls.maxPolarAngle    = Math.PI / 2.1;
 controls.target.set(0, 0, 0);
+// Touch: one finger = orbit, two fingers = zoom+pan
+controls.touches = {
+  ONE:  THREE.TOUCH.ROTATE,
+  TWO:  THREE.TOUCH.DOLLY_PAN,
+};
 
 // ─── State ────────────────────────────────────────────────────────────────────
 let plotData      = {};
@@ -196,16 +201,22 @@ function showPopup(plotId, screenX, screenY) {
     ${info.status === 'available' ? '<button class="popup-enquire" onclick="enquire(\'' + plotId + '\')">Enquire Now</button>' : ''}
   `;
 
-  // Position popup — keep it on screen
-  const pw = 260, ph = 220;
-  let left = screenX + 20;
-  let top  = screenY - 20;
-  if (left + pw > window.innerWidth  - 20) left = screenX - pw - 20;
-  if (top  + ph > window.innerHeight - 20) top  = window.innerHeight - ph - 20;
-  if (top < 20) top = 20;
+  if (isMobile()) {
+    popup.classList.add('bottom-sheet');
+    popup.style.left = '';
+    popup.style.top  = '';
+  } else {
+    popup.classList.remove('bottom-sheet');
+    const pw = 260, ph = 240;
+    let left = screenX + 20;
+    let top  = screenY - 20;
+    if (left + pw > window.innerWidth  - 20) left = screenX - pw - 20;
+    if (top  + ph > window.innerHeight - 20) top  = window.innerHeight - ph - 20;
+    if (top < 20) top = 20;
+    popup.style.left = left + 'px';
+    popup.style.top  = top  + 'px';
+  }
 
-  popup.style.left    = left + 'px';
-  popup.style.top     = top  + 'px';
   popup.style.display = 'block';
   requestAnimationFrame(() => popup.classList.add('visible'));
 }
@@ -213,6 +224,7 @@ function showPopup(plotId, screenX, screenY) {
 window.closePopup = function () {
   const popup = document.getElementById('plot-popup');
   popup.classList.remove('visible');
+  popup.classList.remove('bottom-sheet');
   setTimeout(() => popup.style.display = 'none', 200);
 
   if (selectedMesh) {
@@ -227,34 +239,43 @@ window.enquire = function (plotId) {
   alert(`Thank you for your interest in Plot ${plotId}!\nOur team will contact you shortly.`);
 };
 
-// ─── Mouse Events ─────────────────────────────────────────────────────────────
-function getPlotAtMouse(event) {
-  const rect  = renderer.domElement.getBoundingClientRect();
-  mouse.x =  ((event.clientX - rect.left) / rect.width)  * 2 - 1;
-  mouse.y = -((event.clientY - rect.top)  / rect.height) * 2 + 1;
+// ─── Input Helpers ────────────────────────────────────────────────────────────
+const isMobile = () => window.matchMedia('(pointer: coarse)').matches;
 
+function getPlotAtPoint(clientX, clientY) {
+  const rect = renderer.domElement.getBoundingClientRect();
+  mouse.x =  ((clientX - rect.left) / rect.width)  * 2 - 1;
+  mouse.y = -((clientY - rect.top)  / rect.height) * 2 + 1;
   raycaster.setFromCamera(mouse, camera);
-  const allMeshes = Object.values(plotMeshes);
-  const hits      = raycaster.intersectObjects(allMeshes, false);
+  const hits = raycaster.intersectObjects(Object.values(plotMeshes), false);
   return hits.length ? hits[0].object : null;
 }
 
+function selectPlot(mesh, clientX, clientY) {
+  if (selectedMesh) restoreOriginal(selectedMesh);
+  closePopupSilent();
+  selectedMesh = mesh;
+  if (mesh) {
+    applyHighlight(mesh, SELECTED_EMISSIVE, SELECTED_INTENSITY);
+    showPopup(mesh.userData.plotId, clientX, clientY);
+  }
+}
+
+// ─── Desktop Mouse Events ─────────────────────────────────────────────────────
 window.addEventListener('mousemove', (e) => {
-  const hit = getPlotAtMouse(e);
+  if (isMobile()) return;
 
+  const hit = getPlotAtPoint(e.clientX, e.clientY);
   if (hoveredMesh && hoveredMesh !== selectedMesh) restoreOriginal(hoveredMesh);
-
   hoveredMesh = hit;
   document.body.style.cursor = hit ? 'pointer' : 'default';
-
   if (hit && hit !== selectedMesh) applyHighlight(hit, HOVER_EMISSIVE, HOVER_INTENSITY);
 
-  // Tooltip
   const tooltip = document.getElementById('tooltip');
   if (hit) {
-    const id   = hit.userData.plotId;
+    const id = hit.userData.plotId;
     const info = plotData[id];
-    tooltip.textContent = info ? `Plot ${id} · ${info.type} · ${info.status.toUpperCase()}` : `Plot ${id}`;
+    tooltip.textContent   = info ? `Plot ${id} · ${info.type} · ${info.status.toUpperCase()}` : `Plot ${id}`;
     tooltip.style.left    = (e.clientX + 16) + 'px';
     tooltip.style.top     = (e.clientY - 10) + 'px';
     tooltip.style.opacity = '1';
@@ -264,21 +285,34 @@ window.addEventListener('mousemove', (e) => {
 });
 
 window.addEventListener('click', (e) => {
-  const hit = getPlotAtMouse(e);
-
-  // Deselect previous
-  if (selectedMesh) {
-    restoreOriginal(selectedMesh);
-    selectedMesh = null;
-  }
-  closePopupSilent();
-
-  if (hit) {
-    selectedMesh = hit;
-    applyHighlight(hit, SELECTED_EMISSIVE, SELECTED_INTENSITY);
-    showPopup(hit.userData.plotId, e.clientX, e.clientY);
-  }
+  if (isMobile()) return;
+  const hit = getPlotAtPoint(e.clientX, e.clientY);
+  selectPlot(hit, e.clientX, e.clientY);
 });
+
+// ─── Mobile Touch Events ──────────────────────────────────────────────────────
+let touchStartX = 0, touchStartY = 0, touchMoved = false;
+const TAP_THRESHOLD = 10; // px — movement beyond this = drag, not tap
+
+window.addEventListener('touchstart', (e) => {
+  const t = e.touches[0];
+  touchStartX = t.clientX;
+  touchStartY = t.clientY;
+  touchMoved  = false;
+}, { passive: true });
+
+window.addEventListener('touchmove', () => { touchMoved = true; }, { passive: true });
+
+window.addEventListener('touchend', (e) => {
+  if (touchMoved) return;                    // was a drag/orbit, not a tap
+  const t = e.changedTouches[0];
+  const dx = Math.abs(t.clientX - touchStartX);
+  const dy = Math.abs(t.clientY - touchStartY);
+  if (dx > TAP_THRESHOLD || dy > TAP_THRESHOLD) return;
+
+  const hit = getPlotAtPoint(t.clientX, t.clientY);
+  selectPlot(hit, t.clientX, t.clientY);
+}, { passive: true });
 
 function closePopupSilent() {
   const popup = document.getElementById('plot-popup');
