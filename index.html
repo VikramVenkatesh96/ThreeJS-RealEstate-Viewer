@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MMS Experience — Site Layout Viewer</title>
+  <link rel="stylesheet" href="./css/style.css" />
+</head>
+<body>
+
+  <!-- ── Three.js Canvas ── -->
+  <canvas id="canvas"></canvas>
+
+  <!-- ── Loading Overlay ── -->
+  <div id="loading-overlay">
+    <div class="loading-logo">MMS<span>.</span>Experience</div>
+    <div class="progress-track">
+      <div id="progress-bar"></div>
+    </div>
+    <div id="loading-text">Loading 3D Model…</div>
+  </div>
+
+  <!-- ── Header ── -->
+  <header id="header">
+    <div>
+      <div class="brand">MMS<span>.</span>Experience</div>
+      <div class="project-name">Site Layout — Interactive Viewer</div>
+    </div>
+  </header>
+
+  <!-- ── Stats Bar ── -->
+  <div id="stats-bar">
+    <div class="stat-pill available">
+      <div class="stat-dot"></div>
+      <span>Available</span>
+      <span class="count" id="stat-available">—</span>
+    </div>
+    <div class="stat-pill reserved">
+      <div class="stat-dot"></div>
+      <span>Reserved</span>
+      <span class="count" id="stat-reserved">—</span>
+    </div>
+    <div class="stat-pill sold">
+      <div class="stat-dot"></div>
+      <span>Sold</span>
+      <span class="count" id="stat-sold">—</span>
+    </div>
+    <div class="stat-pill total">
+      <div class="stat-dot"></div>
+      <span>Total</span>
+      <span class="count" id="stat-total">—</span>
+    </div>
+  </div>
+
+  <!-- ── Legend ── -->
+  <div id="legend">
+    <div class="legend-title">Legend</div>
+    <div class="legend-item">
+      <div class="legend-swatch available"></div>
+      <span>Available</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-swatch reserved"></div>
+      <span>Reserved</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-swatch sold"></div>
+      <span>Sold / Booked</span>
+    </div>
+  </div>
+
+  <!-- ── Compass ── -->
+  <div id="compass">
+    <div class="compass-needle">
+      <span class="n">N</span>
+      <span>✦</span>
+      <span class="s">S</span>
+    </div>
+  </div>
+
+  <!-- ── Filter Panel ── -->
+  <div id="filter-panel">
+    <button class="filter-btn f-all active" onclick="filterStatus('all')">All Plots</button>
+    <button class="filter-btn f-avail" onclick="filterStatus('available')">Available</button>
+    <button class="filter-btn f-res"   onclick="filterStatus('reserved')">Reserved</button>
+    <button class="filter-btn f-sold"  onclick="filterStatus('sold')">Sold</button>
+  </div>
+
+  <!-- ── Camera Reset ── -->
+  <div id="controls-panel">
+    <button class="ctrl-btn" onclick="resetCamera()" title="Reset Camera">⌂</button>
+  </div>
+
+  <!-- ── Tooltip ── -->
+  <div id="tooltip"></div>
+
+  <!-- ── Plot Popup ── -->
+  <div id="plot-popup"></div>
+
+  <!-- ── Three.js (ES module import map) ── -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three":                      "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js",
+      "three/addons/":              "https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/"
+    }
+  }
+  </script>
+
+  <script type="module" src="./js/viewer.js"></script>
+</body>
+</html>
