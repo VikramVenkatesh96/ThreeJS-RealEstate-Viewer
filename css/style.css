@@ -366,79 +366,96 @@ html, body {
   max-width: 100%;
   border-radius: 20px 20px 0 0;
   border-bottom: none;
-  padding: 24px 24px 36px;
-  transform: translateY(20px) scale(1) !important;
+  padding: 8px 24px 40px;
+  /* slide up from below instead of scale */
+  transform: translateY(100%) !important;
+  opacity: 1 !important;
+  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1) !important;
 }
 
 #plot-popup.bottom-sheet.visible {
-  transform: translateY(0) scale(1) !important;
+  transform: translateY(0) !important;
 }
 
-/* drag handle on bottom sheet */
+/* drag handle */
 #plot-popup.bottom-sheet::before {
   content: '';
   display: block;
-  width: 40px; height: 4px;
-  background: rgba(255,255,255,0.2);
+  width: 36px; height: 4px;
+  background: rgba(255,255,255,0.18);
   border-radius: 2px;
-  margin: 0 auto 18px;
+  margin: 0 auto 16px;
 }
 
 #plot-popup.bottom-sheet .popup-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px 16px;
+  gap: 10px 16px;
 }
 
 /* ── Responsive ── */
 @media (max-width: 640px) {
-  /* Header */
-  #header { padding: 12px 16px; }
-  .brand  { font-size: 1.1rem; }
-
-  /* Stats bar — smaller, scrollable if needed */
-  #stats-bar {
-    top: 64px;
-    gap: 1px;
-    padding: 5px 6px;
-    max-width: calc(100vw - 24px);
+  /* Header — smaller, non-blocking */
+  #header {
+    padding: 10px 14px;
+    pointer-events: none;
   }
-  .stat-pill { padding: 5px 10px; font-size: 0.72rem; }
-  .stat-pill .count { font-size: 0.85rem; }
+  .brand       { font-size: 1rem; }
+  .project-name { font-size: 0.65rem; }
 
-  /* Hide legend — info is in popup */
+  /* Stats bar — left-aligned, leaves room for compass on right */
+  #stats-bar {
+    top: 56px;
+    left: 14px;
+    transform: none;   /* remove the translateX(-50%) centering */
+    gap: 1px;
+    padding: 4px 5px;
+    max-width: calc(100vw - 80px); /* leave 66px gap for compass */
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+  .stat-pill  { padding: 4px 8px; font-size: 0.68rem; gap: 5px; flex-shrink: 0; }
+  .stat-pill .count { font-size: 0.8rem; }
+
+  /* Hide legend */
   #legend { display: none; }
 
-  /* Compass smaller, tucked up */
-  #compass { top: 64px; right: 12px; width: 42px; height: 42px; }
+  /* Compass — top-right, below status bar */
+  #compass {
+    top: 56px;
+    right: 14px;
+    width: 40px; height: 40px;
+  }
+  .compass-needle { font-size: 0.6rem; }
   .compass-needle .n { font-size: 0.75rem; }
 
-  /* Filter bar — full width, big tap targets */
+  /* Filter bar — stays as a pill, centered, just bigger tap targets.
+     IMPORTANT: keep it as inline (auto width) so it doesn't block the canvas */
   #filter-panel {
-    bottom: 0;
-    left: 0; right: 0;
-    transform: none;
-    border-radius: 0;
-    border-left: none; border-right: none; border-bottom: none;
-    padding: 10px 12px 28px; /* extra bottom for home bar */
-    justify-content: space-around;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    /* Keep original pill shape — do NOT stretch to full width */
+    width: auto;
+    padding: 6px 8px;
     gap: 4px;
-    backdrop-filter: blur(24px);
+    /* Ensure only the pill itself catches touches, not the space around it */
+    pointer-events: auto;
   }
 
   .filter-btn {
-    flex: 1;
-    padding: 10px 8px;
-    font-size: 0.78rem;
-    text-align: center;
+    padding: 10px 14px;
+    font-size: 0.8rem;
+    white-space: nowrap;
   }
 
-  /* Camera reset — above filter bar */
+  /* Camera reset button */
   #controls-panel {
-    bottom: 100px;
-    right: 16px;
+    bottom: 88px;
+    right: 14px;
   }
 
   /* Tooltip hidden on touch */
-  #tooltip { display: none; }
+  #tooltip { display: none !important; }
 }

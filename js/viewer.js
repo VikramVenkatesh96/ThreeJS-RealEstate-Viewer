@@ -291,24 +291,44 @@ window.addEventListener('click', (e) => {
 });
 
 // ─── Mobile Touch Events ──────────────────────────────────────────────────────
-let touchStartX = 0, touchStartY = 0, touchMoved = false;
-const TAP_THRESHOLD = 10; // px — movement beyond this = drag, not tap
+let touchStartX = 0, touchStartY = 0, touchStartTime = 0, multiTouch = false;
+const TAP_DIST_MAX = 14;  // px  — max finger travel to count as a tap
+const TAP_TIME_MAX = 300; // ms  — max duration to count as a tap
 
 window.addEventListener('touchstart', (e) => {
+  multiTouch = e.touches.length > 1;
+  if (multiTouch) return;
   const t = e.touches[0];
-  touchStartX = t.clientX;
-  touchStartY = t.clientY;
-  touchMoved  = false;
+  touchStartX    = t.clientX;
+  touchStartY    = t.clientY;
+  touchStartTime = Date.now();
 }, { passive: true });
 
-window.addEventListener('touchmove', () => { touchMoved = true; }, { passive: true });
+window.addEventListener('touchstart', (e) => {
+  if (e.touches.length > 1) multiTouch = true;
+}, { passive: true });
 
 window.addEventListener('touchend', (e) => {
-  if (touchMoved) return;                    // was a drag/orbit, not a tap
-  const t = e.changedTouches[0];
-  const dx = Math.abs(t.clientX - touchStartX);
-  const dy = Math.abs(t.clientY - touchStartY);
-  if (dx > TAP_THRESHOLD || dy > TAP_THRESHOLD) return;
+  if (multiTouch) { multiTouch = false; return; }
+
+  const t    = e.changedTouches[0];
+  const dx   = Math.abs(t.clientX - touchStartX);
+  const dy   = Math.abs(t.clientY - touchStartY);
+  const dt   = Date.now() - touchStartTime;
+
+  // Must be a short, stationary tap
+  if (dx > TAP_DIST_MAX || dy > TAP_DIST_MAX || dt > TAP_TIME_MAX) return;
+
+  // Ignore taps on UI elements — walk up the DOM from the tap target
+  // If any ancestor is a UI panel, don't raycast
+  let el = document.elementFromPoint(t.clientX, t.clientY);
+  while (el && el !== document.body) {
+    const id = el.id || '';
+    if (id === 'filter-panel' || id === 'controls-panel' ||
+        id === 'plot-popup'   || id === 'stats-bar'      ||
+        id === 'legend'       || id === 'compass') return;
+    el = el.parentElement;
+  }
 
   const hit = getPlotAtPoint(t.clientX, t.clientY);
   selectPlot(hit, t.clientX, t.clientY);
