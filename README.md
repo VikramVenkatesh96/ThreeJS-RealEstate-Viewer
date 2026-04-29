@@ -51,25 +51,6 @@ Edit `data/plots.json` to reflect real prices, sizes, and statuses:
 
 **Status values:** `available` | `reserved` | `sold`
 
-### 3. Run locally (required — browsers block local file:// imports)
-
-**Option A — Python (no install needed)**
-```bash
-cd real-estate-viewer
-python3 -m http.server 8080
-# Open: http://localhost:8080
-```
-
-**Option B — Node live-server**
-```bash
-npx live-server real-estate-viewer
-```
-
-**Option C — VS Code**  
-Install the **Live Server** extension, right-click `index.html` → *Open with Live Server*.
-
----
-
 ## Hosting on GitHub Pages
 
 1. Push this folder to a GitHub repository (repo root or a `/docs` subfolder).
