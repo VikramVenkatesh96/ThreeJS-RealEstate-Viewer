@@ -128,6 +128,51 @@
   <!-- ── Flat Popup ── -->
   <div id="plot-popup"></div>
 
+  <!-- ── Enquiry Modal ── -->
+  <div id="enquiry-overlay">
+    <div id="enquiry-modal" role="dialog" aria-modal="true" aria-labelledby="enq-title">
+      <div class="enq-header">
+        <div>
+          <div class="enq-eyebrow">Enquiry</div>
+          <h2 class="enq-title" id="enq-title">Interested in <span id="enq-flat-label"></span>?</h2>
+        </div>
+        <button id="enq-close" aria-label="Close enquiry">✕</button>
+      </div>
+
+      <div class="enq-body">
+        <div class="enq-row">
+          <div class="enq-field">
+            <label class="enq-label" for="enq-name">Full Name <span class="req">*</span></label>
+            <input id="enq-name" type="text" placeholder="John Doe" autocomplete="name" />
+            <span class="enq-hint">Minimum 2 characters</span>
+          </div>
+          <div class="enq-field">
+            <label class="enq-label" for="enq-phone">Phone <span class="req">*</span></label>
+            <input id="enq-phone" type="tel" placeholder="+91 98765 43210" autocomplete="tel" />
+            <span class="enq-hint">7–15 digits</span>
+          </div>
+        </div>
+
+        <div class="enq-field">
+          <label class="enq-label" for="enq-email">Email Address <span class="req">*</span></label>
+          <input id="enq-email" type="email" placeholder="you@example.com" autocomplete="email" />
+          <span class="enq-hint">Valid email required</span>
+        </div>
+
+        <div class="enq-field">
+          <label class="enq-label" for="enq-message">Message <span class="req">*</span></label>
+          <textarea id="enq-message" rows="3" placeholder="I'd like to know more about this flat…"></textarea>
+          <span class="enq-hint">Minimum 5 characters</span>
+        </div>
+      </div>
+
+      <div class="enq-footer">
+        <div id="enq-toast" class="enq-toast"></div>
+        <button id="enq-submit" class="enq-submit" disabled>Submit Enquiry</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ── Three.js via CDN (ES module import map) ── -->
   <script type="importmap">
     {

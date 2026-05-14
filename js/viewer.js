@@ -43,9 +43,9 @@ const STATUS_HOVER = {
 };
 
 // Emissive intensity multipliers — lower = more original texture shows through
-const EMISSIVE_FLAT_DEFAULT  = 0.1;   // resting state
-const EMISSIVE_FLAT_HOVER    = 0.15;   // hover
-const EMISSIVE_FLAT_SELECTED = 0.25;   // selected
+const EMISSIVE_FLAT_DEFAULT  = 0.05;   // resting state
+const EMISSIVE_FLAT_HOVER    = 0.10;   // hover
+const EMISSIVE_FLAT_SELECTED = 0.18;   // selected
 
 // Tint alpha — how strongly the status colour overrides the original material colour.
 // 0.0 = fully original material, 1.0 = fully status colour.
@@ -587,6 +587,10 @@ function showFlatPopup(key, root) {
     // TODO: launch 360° viewer for selectedFlat.key
     console.log('[360] Open panorama for', key);
   });
+  popup.querySelector('.btn-enquire')?.addEventListener('click', ev => {
+    ev.stopPropagation();
+    openEnquiryModal(d);
+  });
 }
 
 function closeFlat(restoreColor = true) {
@@ -603,6 +607,95 @@ function closeFlat(restoreColor = true) {
 }
 
 function hidePopup() { popup.classList.remove('visible'); }
+
+/* ─────────────────────────────────────────────────────────────
+   ENQUIRY MODAL
+───────────────────────────────────────────────────────────── */
+const enquiryOverlay = document.getElementById('enquiry-overlay');
+
+function openEnquiryModal(flatData) {
+  document.getElementById('enq-flat-label').textContent = flatData.label ?? '';
+  // Clear previous state
+  ['enq-name','enq-phone','enq-email','enq-message'].forEach(id => {
+    const el = document.getElementById(id);
+    el.value = '';
+    el.closest('.enq-field')?.classList.remove('error', 'valid');
+  });
+  document.getElementById('enq-submit').disabled = true;
+  document.getElementById('enq-toast').className = 'enq-toast';
+  enquiryOverlay.classList.add('visible');
+}
+
+function closeEnquiryModal() {
+  enquiryOverlay.classList.remove('visible');
+}
+
+// Validation helpers
+const validators = {
+  'enq-name':    v => v.trim().length >= 2,
+  'enq-phone':   v => /^[+\d\s\-()]{7,15}$/.test(v.trim()),
+  'enq-email':   v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()),
+  'enq-message': v => v.trim().length >= 5,
+};
+
+function validateEnquiryField(id) {
+  const el    = document.getElementById(id);
+  const field = el.closest('.enq-field');
+  const ok    = validators[id](el.value);
+  field.classList.toggle('error', !ok && el.value.length > 0);
+  field.classList.toggle('valid', ok);
+  return ok;
+}
+
+function checkEnquiryForm() {
+  const allOk = Object.keys(validators).every(id => validators[id](document.getElementById(id).value));
+  document.getElementById('enq-submit').disabled = !allOk;
+}
+
+// Wire up live validation
+document.querySelectorAll('#enquiry-modal input, #enquiry-modal textarea').forEach(el => {
+  el.addEventListener('input', () => {
+    validateEnquiryField(el.id);
+    checkEnquiryForm();
+  });
+  el.addEventListener('blur', () => validateEnquiryField(el.id));
+});
+
+// Close on overlay backdrop click
+enquiryOverlay.addEventListener('click', e => {
+  if (e.target === enquiryOverlay) closeEnquiryModal();
+});
+
+document.getElementById('enq-close').addEventListener('click', closeEnquiryModal);
+
+document.getElementById('enq-submit').addEventListener('click', () => {
+  const submitBtn = document.getElementById('enq-submit');
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Sending…';
+
+  // TODO: Replace with real API call
+  const success = true; // stub
+
+  setTimeout(() => {
+    const toast = document.getElementById('enq-toast');
+    if (success) {
+      toast.textContent  = '✓  Enquiry sent! We\'ll be in touch soon.';
+      toast.className    = 'enq-toast success visible';
+    } else {
+      toast.textContent  = '✕  Something went wrong. Please try again.';
+      toast.className    = 'enq-toast error visible';
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Submit Enquiry';
+      return;
+    }
+    // Success: close everything and return to interior scene
+    setTimeout(() => {
+      closeEnquiryModal();
+      hidePopup();
+      closeFlat();
+    }, 1800);
+  }, 1000); // simulate network delay
+});
 
 function buildPopupHTML(d) {
   const label = d.status.charAt(0).toUpperCase() + d.status.slice(1);
@@ -655,6 +748,15 @@ function buildPopupHTML(d) {
         </svg>
         360° View
       </button>
+      ${d.status === 'available' ? `
+      <button class="btn-enquire" aria-label="Enquire about this flat">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+        Enquire Now
+      </button>` : ''}
     </div>`;
 }
 
