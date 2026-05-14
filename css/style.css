@@ -418,65 +418,90 @@ html, body {
 @media (max-width: 600px) {
   #legend { display: none; }
 
-  #header { padding: 12px 16px; }
-  .brand { font-size: 16px; }
+  /* ── Header ── */
+  #header { padding: 10px 12px; }
+  .brand { font-size: 15px; }
+  .project-name { font-size: 10px; }
 
-  #back-btn { top: 12px; right: 12px; font-size: 10px; padding: 7px 13px; }
+  /* ── Breadcrumb — push it down so it clears the brand ── */
+  #breadcrumb {
+    top: 52px !important;
+    font-size: 10px;
+  }
 
-  /* Stats — single scrollable row, no wrapping */
+  /* ── Back button ── */
+  #back-btn {
+    top: 10px !important;
+    right: 12px !important;
+    font-size: 10px;
+    padding: 6px 12px;
+  }
+
+  /* ── Stats — one horizontal scrollable row ── */
   #stats-bar {
-    top: 60px;
-    flex-wrap: nowrap;
+    top: 76px !important;
+    left: 0 !important;
+    right: 0 !important;
+    transform: none !important;
+    flex-wrap: nowrap !important;
+    justify-content: flex-start !important;
     overflow-x: auto;
     overflow-y: visible;
-    justify-content: flex-start;
-    padding: 0 16px;
+    padding: 0 12px;
     gap: 6px;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
   }
   #stats-bar::-webkit-scrollbar { display: none; }
-  .stat-pill { padding: 5px 10px; font-size: 10px; flex-shrink: 0; }
+  .stat-pill { flex-shrink: 0; padding: 5px 10px; font-size: 10px; }
 
-  /* Filter — single scrollable row pinned to bottom-left, clear of right-side controls */
+  /* ── Filter panel — horizontal scrollable row, left-anchored ── */
   #filter-panel {
-    bottom: 16px;
-    left: 0;
-    right: 64px;           /* leave room for compass + reset on the right */
-    transform: none;
-    flex-wrap: nowrap;
+    bottom: 16px !important;
+    left: 0 !important;
+    right: 56px !important;       /* gap for compass+reset stack on the right */
+    transform: none !important;
+    flex-wrap: nowrap !important;
+    justify-content: flex-start !important;
     overflow-x: auto;
     overflow-y: visible;
-    justify-content: flex-start;
-    padding: 0 16px;
+    padding: 0 12px;
     gap: 6px;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
   }
   #filter-panel::-webkit-scrollbar { display: none; }
   #filter-panel.hidden {
-    opacity: 0;
-    pointer-events: none;
-    transform: translateY(12px);  /* keep hidden animation working */
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transform: translateY(8px) !important;
   }
-  .filter-btn { padding: 8px 14px; font-size: 10px; flex-shrink: 0; }
+  .filter-btn { flex-shrink: 0; padding: 8px 14px; font-size: 10px; }
 
-  /* Compass + camera reset — stacked on the right, clear of filter row */
+  /* ── Compass — anchored bottom-right above reset ── */
   #compass {
-    right: 12px;
-    top: auto;
-    bottom: 68px;
-    transform: none;
-    width: 44px; height: 44px;
+    right: 12px !important;
+    left: auto !important;
+    top: auto !important;
+    bottom: 64px !important;
+    transform: none !important;
+    width: 40px; height: 40px;
   }
-  #controls-panel { bottom: 16px; right: 12px; }
-  .ctrl-btn { width: 38px; height: 38px; font-size: 16px; }
 
-  /* Popup sits above the filter row */
+  /* ── Camera reset — bottom-right corner ── */
+  #controls-panel {
+    bottom: 16px !important;
+    right: 12px !important;
+  }
+  .ctrl-btn { width: 38px; height: 38px; font-size: 15px; }
+
+  /* ── Popup ── */
   #plot-popup { bottom: 76px; border-radius: 14px; padding: 16px; }
   .popup-title { font-size: 17px; }
   .popup-price-value { font-size: 18px; }
+  .btn-360 { font-size: 11px; padding: 10px 14px; }
 
+  /* ── Mode hint ── */
   #mode-hint { font-size: 11px; padding: 8px 16px; bottom: 76px; }
 }
 
