@@ -2,8 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MMS Experience — Site Layout Viewer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>MMS Experience — Building Viewer</title>
   <link rel="stylesheet" href="./css/style.css" />
 </head>
 <body>
@@ -11,25 +14,40 @@
   <!-- ── Three.js Canvas ── -->
   <canvas id="canvas"></canvas>
 
+  <!-- ── Model Transition Overlay ── -->
+  <div id="transition-overlay"></div>
+
   <!-- ── Loading Overlay ── -->
   <div id="loading-overlay">
     <div class="loading-logo">MMS<span>.</span>Experience</div>
     <div class="progress-track">
       <div id="progress-bar"></div>
     </div>
-    <div id="loading-text">Loading 3D Model…</div>
+    <div id="loading-text">Initialising…</div>
   </div>
 
   <!-- ── Header ── -->
   <header id="header">
     <div>
       <div class="brand">MMS<span>.</span>Experience</div>
-      <div class="project-name">Site Layout — Interactive Viewer</div>
+      <div class="project-name">Building Viewer — Interactive 3D</div>
     </div>
   </header>
 
-  <!-- ── Stats Bar ── -->
-  <div id="stats-bar">
+  <!-- ── Breadcrumb ── -->
+  <div id="breadcrumb">
+    <span>Building</span>
+    <span class="sep">›</span>
+    <span class="crumb-active" id="crumb-active">Site</span>
+  </div>
+
+  <!-- ── Back Button (interior mode only) ── -->
+  <button id="back-btn" aria-label="Back to exterior">
+    ← Back
+  </button>
+
+  <!-- ── Stats Bar (interior mode) ── -->
+  <div id="stats-bar" class="hidden">
     <div class="stat-pill available">
       <div class="stat-dot"></div>
       <span>Available</span>
@@ -52,8 +70,8 @@
     </div>
   </div>
 
-  <!-- ── Legend ── -->
-  <div id="legend">
+  <!-- ── Legend (interior mode) ── -->
+  <div id="legend" class="hidden">
     <div class="legend-title">Legend</div>
     <div class="legend-item">
       <div class="legend-swatch available"></div>
@@ -78,12 +96,15 @@
     </div>
   </div>
 
-  <!-- ── Filter Panel ── -->
-  <div id="filter-panel">
-    <button class="filter-btn f-all active" onclick="filterStatus('all')">All Plots</button>
-    <button class="filter-btn f-avail" onclick="filterStatus('available')">Available</button>
-    <button class="filter-btn f-res"   onclick="filterStatus('reserved')">Reserved</button>
-    <button class="filter-btn f-sold"  onclick="filterStatus('sold')">Sold</button>
+  <!-- ── Mode Hint ── -->
+  <div id="mode-hint" class="hidden"></div>
+
+  <!-- ── Filter Panel (interior mode) ── -->
+  <div id="filter-panel" class="hidden">
+    <button class="filter-btn f-all active"  onclick="filterStatus('all')">All Flats</button>
+    <button class="filter-btn f-avail"        onclick="filterStatus('available')">Available</button>
+    <button class="filter-btn f-res"          onclick="filterStatus('reserved')">Reserved</button>
+    <button class="filter-btn f-sold"         onclick="filterStatus('sold')">Sold</button>
   </div>
 
   <!-- ── Camera Reset ── -->
@@ -94,19 +115,20 @@
   <!-- ── Tooltip ── -->
   <div id="tooltip"></div>
 
-  <!-- ── Plot Popup ── -->
+  <!-- ── Flat Popup ── -->
   <div id="plot-popup"></div>
 
-  <!-- ── Three.js (ES module import map) ── -->
+  <!-- ── Three.js via CDN (ES module import map) ── -->
   <script type="importmap">
-  {
-    "imports": {
-      "three":                      "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js",
-      "three/addons/":              "https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/"
+    {
+      "imports": {
+        "three":          "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js",
+        "three/addons/":  "https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/"
+      }
     }
-  }
   </script>
 
   <script type="module" src="./js/viewer.js"></script>
+
 </body>
 </html>
