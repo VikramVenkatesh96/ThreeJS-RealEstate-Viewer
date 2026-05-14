@@ -43,9 +43,14 @@ const STATUS_HOVER = {
 };
 
 // Emissive intensity multipliers — lower = more original texture shows through
-const EMISSIVE_FLAT_DEFAULT  = 0.04;   // resting state
-const EMISSIVE_FLAT_HOVER    = 0.10;   // hover
-const EMISSIVE_FLAT_SELECTED = 0.18;   // selected
+const EMISSIVE_FLAT_DEFAULT  = 0.1;   // resting state
+const EMISSIVE_FLAT_HOVER    = 0.15;   // hover
+const EMISSIVE_FLAT_SELECTED = 0.25;   // selected
+
+// Tint alpha — how strongly the status colour overrides the original material colour.
+// 0.0 = fully original material, 1.0 = fully status colour.
+// Can be changed at runtime via the UI slider; applyColor always reads this variable.
+let TINT_ALPHA = 0.45;
 
 /* ─────────────────────────────────────────────────────────────
    STATE
@@ -122,7 +127,7 @@ const fill = new THREE.DirectionalLight(0xc8e0ff, 0.4);
 fill.position.set(-15, 20, -10);
 scene.add(fill);
 
-scene.add(new THREE.HemisphereLight(0x88aacc, 0x443322, 0.5));
+scene.add(new THREE.HemisphereLight(0x88aacc, 0x443322, 5.5));
 
 /* ─────────────────────────────────────────────────────────────
    MATERIAL HELPERS
@@ -158,18 +163,50 @@ function restoreMaterials(root) {
 }
 
 function applyColor(root, hex, emissiveFactor = 0.12) {
-  const color    = new THREE.Color(hex);
-  const emissive = new THREE.Color(hex).multiplyScalar(emissiveFactor);
-  getMeshes(root).forEach(mesh => {
-    const tint = m => {
+  const statusColor = new THREE.Color(hex);
+  // Scale emissive by TINT_ALPHA so glow also softens when tint is reduced
+  const emissive    = new THREE.Color(hex).multiplyScalar(emissiveFactor * TINT_ALPHA);
+
+  // We need the saved originals to blend from — saveMaterials must have been called first.
+  const saved = savedMaterials.get(root);
+
+  getMeshes(root).forEach((mesh, i) => {
+    const tint = (m, origM) => {
       m = m.clone();
-      m.color    = color;
+      // Blend: lerp from original colour toward the status colour by TINT_ALPHA
+      const blended = origM ? origM.color.clone().lerp(statusColor, TINT_ALPHA) : statusColor.clone();
+      m.color    = blended;
       m.emissive = emissive;
       return m;
     };
-    mesh.material = Array.isArray(mesh.material)
-      ? mesh.material.map(tint)
-      : tint(mesh.material);
+
+    // Look up original material for this mesh from saved snapshot
+    const savedEntry = saved ? saved.find(e => e.mesh === mesh) : null;
+
+    if (Array.isArray(mesh.material)) {
+      mesh.material = mesh.material.map((m, mi) => {
+        const origM = savedEntry && Array.isArray(savedEntry.mats) ? savedEntry.mats[mi] : null;
+        return tint(m, origM);
+      });
+    } else {
+      const origM = savedEntry && !Array.isArray(savedEntry.mats) ? savedEntry.mats : null;
+      mesh.material = tint(mesh.material, origM);
+    }
+  });
+}
+
+// Re-apply all current flat colours using the latest TINT_ALPHA value.
+// Called whenever the slider changes.
+function reapplyAllTints() {
+  if (!flatRoots || Object.keys(flatRoots).length === 0) return;
+  // Restore originals first, then re-tint
+  Object.entries(flatRoots).forEach(([key, root]) => {
+    restoreMaterials(root);
+    const status = flatsData[key]?.status ?? 'available';
+    // Determine emissive factor: use selected level if currently selected, default otherwise
+    const isSelected = selectedFlat && selectedFlat.key === key;
+    const emissive   = isSelected ? EMISSIVE_FLAT_SELECTED : EMISSIVE_FLAT_DEFAULT;
+    applyColor(root, STATUS_COLORS[status] ?? STATUS_COLORS.available, emissive);
   });
 }
 
@@ -311,9 +348,9 @@ function loadInterior() {
         });
 
         for (const [key, root] of Object.entries(flatRoots)) {
+          saveMaterials(root);   // ← save originals FIRST, before any tint is applied
           const status = flatsData[key]?.status ?? 'available';
           applyColor(root, STATUS_COLORS[status] ?? STATUS_COLORS.available, EMISSIVE_FLAT_DEFAULT);
-          saveMaterials(root);
         }
 
         if (!Object.keys(flatRoots).length) {
@@ -396,10 +433,22 @@ function updateUI() {
   document.getElementById('stats-bar').classList.toggle('hidden', !isInt);
   document.getElementById('legend').classList.toggle('hidden', !isInt);
   document.getElementById('filter-panel').classList.toggle('hidden', !isInt);
+  document.getElementById('tint-panel').classList.toggle('hidden', !isInt);
   document.getElementById('back-btn').classList.toggle('visible', isInt);
   document.getElementById('crumb-active').textContent = isInt ? 'Floor Plan' : 'Site';
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
   document.querySelector('.filter-btn.f-all').classList.add('active');
+}
+
+// Wire up the tint slider
+{
+  const slider = document.getElementById('tint-slider');
+  const label  = document.getElementById('tint-value');
+  slider.addEventListener('input', () => {
+    TINT_ALPHA = slider.value / 100;
+    label.textContent = slider.value + '%';
+    reapplyAllTints();
+  });
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -437,7 +486,16 @@ canvas.addEventListener('mousemove', e => {
   if (root === hoveredObject) return;
 
   if (hoveredObject) {
-    restoreMaterials(hoveredObject);
+    const prev = hoveredObject;
+    restoreMaterials(prev);
+    // In interior mode, restore brings back raw GLB colours — re-apply the status tint
+    if (mode === 'interior') {
+      const key    = getKeyForRoot(prev);
+      const status = flatsData[key]?.status ?? 'available';
+      const isSelected = selectedFlat && selectedFlat.root === prev;
+      applyColor(prev, STATUS_COLORS[status] ?? STATUS_COLORS.available,
+                 isSelected ? EMISSIVE_FLAT_SELECTED : EMISSIVE_FLAT_DEFAULT);
+    }
     hoveredObject = null;
     hideTooltip();
     canvas.style.cursor = 'default';
@@ -533,7 +591,14 @@ function showFlatPopup(key, root) {
 
 function closeFlat(restoreColor = true) {
   if (!selectedFlat) return;
-  if (restoreColor) restoreMaterials(selectedFlat.root);
+  if (restoreColor) {
+    const root   = selectedFlat.root;
+    const key    = selectedFlat.key;
+    restoreMaterials(root);
+    // Re-apply status tint (restore returns raw GLB colours)
+    const status = flatsData[key]?.status ?? 'available';
+    applyColor(root, STATUS_COLORS[status] ?? STATUS_COLORS.available, EMISSIVE_FLAT_DEFAULT);
+  }
   selectedFlat = null;
 }
 
@@ -609,7 +674,12 @@ window.filterStatus = function(status) {
   for (const [key, root] of Object.entries(flatRoots)) {
     const show = status === 'all' || flatsData[key]?.status === status;
     root.visible = show;
-    if (show) restoreMaterials(root); // back to status colour
+    if (show) {
+      restoreMaterials(root);
+      // Re-apply status tint (restore returns raw GLB colours)
+      const flatStatus = flatsData[key]?.status ?? 'available';
+      applyColor(root, STATUS_COLORS[flatStatus] ?? STATUS_COLORS.available, EMISSIVE_FLAT_DEFAULT);
+    }
   }
 };
 

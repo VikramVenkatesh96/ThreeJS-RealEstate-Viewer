@@ -270,6 +270,53 @@ html, body {
 .ctrl-btn:hover { color: var(--text); border-color: var(--accent); }
 .ctrl-btn:active { transform: scale(0.92); }
 
+/* ── Tint Slider Panel ── */
+#tint-panel {
+  position: fixed; bottom: 24px; right: 74px; z-index: 10;
+  display: flex; align-items: center; gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 8px 14px;
+  backdrop-filter: blur(12px);
+  box-shadow: var(--shadow);
+  transition: opacity var(--transition), transform var(--transition);
+}
+#tint-panel.hidden { opacity: 0; pointer-events: none; transform: translateY(8px); }
+.tint-label {
+  display: flex; align-items: center; gap: 5px;
+  font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 600;
+  color: var(--muted); white-space: nowrap; letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.tint-label svg { opacity: 0.6; }
+#tint-slider {
+  -webkit-appearance: none; appearance: none;
+  width: 90px; height: 4px;
+  border-radius: 2px; cursor: pointer; outline: none;
+  background: linear-gradient(to right, rgba(232,213,176,0.2), var(--accent));
+  border: none;
+}
+#tint-slider::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--bg);
+  box-shadow: 0 0 6px rgba(232,213,176,0.5);
+  cursor: grab;
+  transition: transform 0.15s ease;
+}
+#tint-slider::-webkit-slider-thumb:active { cursor: grabbing; transform: scale(1.25); }
+#tint-slider::-moz-range-thumb {
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--accent); border: 2px solid var(--bg);
+  cursor: grab;
+}
+#tint-value {
+  font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700;
+  color: var(--accent); min-width: 30px; text-align: right;
+}
+
 /* ── Tooltip ── */
 #tooltip {
   position: fixed; z-index: 30;
