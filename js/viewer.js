@@ -50,7 +50,7 @@ const EMISSIVE_FLAT_SELECTED = 0.18;   // selected
 // Tint alpha — how strongly the status colour overrides the original material colour.
 // 0.0 = fully original material, 1.0 = fully status colour.
 // Can be changed at runtime via the UI slider; applyColor always reads this variable.
-let TINT_ALPHA = 0.45;
+let TINT_ALPHA = 0.5;
 
 /* ─────────────────────────────────────────────────────────────
    STATE
@@ -111,9 +111,9 @@ controls.update();
 /* ─────────────────────────────────────────────────────────────
    LIGHTING
 ───────────────────────────────────────────────────────────── */
-scene.add(new THREE.AmbientLight(0xfdf4e3, 0.6));
+scene.add(new THREE.AmbientLight(0xfdf4e3, 1.0));
 
-const sun = new THREE.DirectionalLight(0xfff8f0, 1.8);
+const sun = new THREE.DirectionalLight(0xfff8f0, 6.8);
 sun.position.set(30, 50, 20);
 sun.castShadow = true;
 sun.shadow.mapSize.set(2048, 2048);
@@ -127,7 +127,7 @@ const fill = new THREE.DirectionalLight(0xc8e0ff, 0.4);
 fill.position.set(-15, 20, -10);
 scene.add(fill);
 
-scene.add(new THREE.HemisphereLight(0x88aacc, 0x443322, 5.5));
+scene.add(new THREE.HemisphereLight(0x88aacc, 0x443322, 0.5));
 
 /* ─────────────────────────────────────────────────────────────
    MATERIAL HELPERS
@@ -433,23 +433,13 @@ function updateUI() {
   document.getElementById('stats-bar').classList.toggle('hidden', !isInt);
   document.getElementById('legend').classList.toggle('hidden', !isInt);
   document.getElementById('filter-panel').classList.toggle('hidden', !isInt);
-  document.getElementById('tint-panel').classList.toggle('hidden', !isInt);
   document.getElementById('back-btn').classList.toggle('visible', isInt);
   document.getElementById('crumb-active').textContent = isInt ? 'Floor Plan' : 'Site';
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
   document.querySelector('.filter-btn.f-all').classList.add('active');
 }
 
-// Wire up the tint slider
-{
-  const slider = document.getElementById('tint-slider');
-  const label  = document.getElementById('tint-value');
-  slider.addEventListener('input', () => {
-    TINT_ALPHA = slider.value / 100;
-    label.textContent = slider.value + '%';
-    reapplyAllTints();
-  });
-}
+
 
 /* ─────────────────────────────────────────────────────────────
    CAMERA ANIMATION
